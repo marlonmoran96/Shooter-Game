@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+
+
+<canvas id="canvas" width="600" height="400" tabindex="1"></canvas>
+
+
+<script>
+var canvas = document.getElementById('canvas');
+
+var context = canvas.getContext('2d');
+
+// array used to hold x and y info
+// had too mny coordinates, so this helped me distinguish between them 
+var ArrayXY= [0, 0] 
+var dy2; 
+var dx2; 
+var angle=0.00; 
+parseFloat(angle);
+// the array is sued to update the positon of the cannon, via the cursor location 
+window.addEventListener('mousemove', function(e2) {
+ ArrayXY[0] = e2.clientX;
+ ArrayXY[1] = e2.clientY;
+
+ // used to calculate bullet path 
+  dx2= 250 - e2.clientX;
+   dy2=- 330 - e2.clientY;
+
+this.angle = Math.atan2(dy2, dx2)
+
+})
+  // fucntion thtat renders the Cannon
+function renderCannon() {
+
+ 
+     dx = ArrayXY[0]-250,
+     dy = ArrayXY[1]-340
+     // used to move the cannon
+     rotation = Math.atan2(dy, dx)
+     
+
+     // makes cannon black 
+ context.fillStyle = 'black'
+ context.save()
+ context.translate(275, 380)
+ context.rotate(rotation)
+ context.fillRect(0, 0, 100, 30)
+ context.restore()
+}
+// called to make targets 
+function makeTargets(x, y, length, speed) {
+  return {
+    x: x,
+    y: y,
+    l: length,
+    s: speed,
+    draw: function() {
+      context.fillRect(this.x, this.y, this.l, this.l);
+    }
+  };
+}
+// Creates cannon Ball
+function ShotCreator(x, y, length, height, speed) {
+  return {
+    x: x,
+    y: y,
+    l: length,
+    
+    h: height,
+    s: speed,
+    draw: function() {
+      context.fillRect(this.x, this.y, this.l, this.h ,this.s);
+    }
+  };
+}
+// Makes Cannon
+function makeCannon(x, y, length, height) {
+  return {
+    x: x,
+    y: y,
+    l: length,
+    h: height,
+    draw: function() {
+      context.fillStyle = 'black'
+      context.fillRect(this.x, this.y, this.l, this.h);
+    }
+  };
+}
+
+// for cannon body
+var CannonBody = new makeCannon(250, 340, 80,100); 
+// shots the user takes
+var shots=0; 
+// ensures shot has not occured 
+var shooting = false;
+//Cannon 
+var Ball = ShotCreator(0, 0, 40, 40,15);
+
+// array used to hold targets 
+var targets = [];
+
+
+
+// targets for array 
+var Tspeed = 3;
+function makeT() {
+  var trgtX = canvas.width;
+  // numbers are rounded so it is a sllid number 
+  var targetsize = Math.round((Math.random() * 15)) + 15;
+  var trgtY = 50;
+  var Ts = Math.round(Math.random() * Tspeed) + Tspeed;
+  // pushes info to class
+  targets.push(makeTargets(trgtX, trgtY, targetsize, Ts));
+}
+
+
+
+//  checks if the the values are touching by seeinf if 
+function touch(a, b, c) {
+  return (a > b && a < c);
+}
+
+// true if the there is a collusion, false otherwise 
+function Hit(a, b) {
+  var result = false;
+  // uses length and x coordinate to chekc if they are touching 
+  if (touch(a.x, b.x, b.x + b.l) || touch(a.x + a.l, b.x, b.x + b.l)) {
+    if (touch(a.y, b.y, b.y + b.l) || touch(a.y + a.l, b.y, b.y + b.l)) {
+      score++;
+      result = true;
+    }
+  }
+  return result;
+}
+
+
+// Track the user's score
+var score = 0;
+
+// time between targets
+var tbtwn = 2 * 1000;
+
+// used for time between targets 
+var timeoutId = null;
+
+// Show the game menu and instructions
+function menu() {
+   
+  clear();
+  context.fillStyle = '#000000';
+  context.font = '42px Georgia';
+  context.textAlign = 'center';
+  context.fillText('Shooter', canvas.width / 2, canvas.height / 3);
+  context.font = '24px Georgia';
+  context.fillText('Click to Start', canvas.width / 2, canvas.height / 2);
+  context.font = '18px Georgia';
+  context.fillText('Use the Mosue to aim', canvas.width / 2, (canvas.height/2 )+40);
+  context.fillText('Use Space Bar to Shoot', canvas.width / 2, (canvas.height/2 )+80);
+  context.fillText('You Only Have 10 shots, Click to Start!', canvas.width / 2, (canvas.height/2 )+120);
+  // Start the game on a click
+  canvas.addEventListener('click', startGame);
+  
+}
+
+// Start the game
+function startGame() {
+
+  clear(); 
+  // time between targets made 
+  time= setInterval(makeT, tbtwn);
+
+  // time out is set, for targets 
+  // to prevent too many targets at once 
+  setTimeout(makeT, 2* 1000);
+
+
+
+  draw();
+  // in order to prevent start game from occuring during game 
+  //canvas.removeEventListener('click', startGame);
+}
+// called after ten shots
+function GameOver() {
+
+  // Stop the targets 
+  clearInterval(time);
+  // clears game 
+  clear();
+  // displays finals results 
+  context.fillStyle = '#000000';
+  context.font = '24px';
+  context.textAlign = 'center';
+  context.fillText('Game Over. Your Final Score: ' + score, canvas.width / 2, canvas.height / 2);
+  context.fillText('Press R on your keyboard to try again!', canvas.width / 2, (canvas.height / 2)+30);
+  context.font = '18px Georgia';
+  canvas.addEventListener('keydown', function(event) {
+  
+  if (event.keyCode === 82) { 
+  
+   // clears final score and restarts game 
+   context.clearRect(0, 0, 600,400 );  
+   
+    menu();
+  }
+});
+  
+}
+
+    
+// in order to shoot with space baf 
+canvas.addEventListener('keydown', function(event) {
+  event.preventDefault();
+  
+  if (event.keyCode === 32) { 
+    shoot();
+    
+  }
+  
+});
+
+
+// Clear the canvas
+function clear() {
+  context.fillStyle = '#FFFFFF';
+  context.fillRect(0, 0, 600, 400);
+}
+
+// Ensures shot is shot 
+function shoot() {
+  
+  if (!shooting) {
+    shots++; 
+    shooting = true;
+    Ball.x =260;
+    Ball.y = 330; 
+  }
+}
+
+// The main draw loop
+function draw() {
+  clear();
+
+  // draws and adds motion
+  targets.forEach(function(trgt) {
+      
+      trgt.x -= trgt.s;
+      
+      context.fillStyle = '#00FF00';
+      trgt.draw();
+    });
+  
+    // Draw the body for the cannon 
+    context.fillStyle = '#FF0000';
+    CannonBody.draw(); 
+    
+  
+  // adds motion to ball
+  if (shooting) {
+    // gets coordinates, based off of mouse angle
+    Ball.x -= (Ball.s) * Math.cos(this.angle);
+    Ball.x -= (Ball.s) * Math.cos(this.angle);
+    Ball.y += (Ball.s) * Math.sin(this.angle);
+    
+    
+
+
+    // used to check for collusion 
+    targets.forEach(function(trgt, i) {
+      if (Hit(Ball,trgt)) {
+        // if hit, splcie in array to get rid of target 
+        targets.splice(i, 1)
+       
+        shooting = false;
+      }
+    });
+    // is used to ensure another shot can be shot, once the shot is off screen
+    if (Ball.y < 0) {
+      shooting = false;
+    }
+    // Draw the Shot
+    context.fillStyle = '#0000FF';
+    Ball.draw();
+  }
+  // score that is displayed int he top left corner 
+  context.fillStyle = '#000000';
+  context.font = '24px Georgia';
+  context.textAlign = 'left';
+  context.fillText('Score: ' + score, 1, 25)
+  // amount of balls left
+  context.fillStyle = '#000000';
+  context.font = '24px Georgia';
+  
+  context.fillText(' Shots ' + shots +"/10", 450, 30)
+  // End or continue the game
+  if (shots==10) {
+    GameOver();
+    //clears cannon arm from game 
+     shots=0; 
+     score=0; 
+    context.clearRect(0, 0, width, height); 
+  } else {
+    window.requestAnimationFrame(draw);
+  }
+  renderCannon(); 
+
+  }
+
+
+
+// Starts game
+menu();
+
+</script>
+</html> 

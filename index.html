@@ -115,15 +115,16 @@ function makeT() {
 
 
 
-//  checks if the the values are touching by seeinf if 
+//  checks if the the values are touching
+
 function touch(a, b, c) {
   return (a > b && a < c);
 }
 
-// true if the there is a collusion, false otherwise 
+// true if their is a collusion, false otherwise 
 function Hit(a, b) {
   var result = false;
-  // uses length and x coordinate to chekc if they are touching 
+  // uses length and x coordinate to check if the targets are touching 
   if (touch(a.x, b.x, b.x + b.l) || touch(a.x + a.l, b.x, b.x + b.l)) {
     if (touch(a.y, b.y, b.y + b.l) || touch(a.y + a.l, b.y, b.y + b.l)) {
       score++;
